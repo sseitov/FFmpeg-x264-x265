@@ -1,0 +1,11 @@
+prefix=/Users/sseitov/Desktop/ffmpeg/FFmpeg-iOS
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: x265
+Description: H.265 (HEVC) encoder library
+Version: 0.152.2854 e9a5903
+Libs: -L${exec_prefix}/lib -lx265 -lpthread -lm -ldl -lc++
+Libs.private: 
+Cflags: -I${prefix}/include
