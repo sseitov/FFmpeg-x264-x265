@@ -1,4 +1,4 @@
-prefix=/Users/sseitov/Desktop/ffmpeg/x265foriOS
+prefix=/Users/sseitov/Desktop/FFmpeg-x264-x265/x265foriOS
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
