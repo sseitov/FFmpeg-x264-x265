@@ -1,6 +1,9 @@
 #!/bin/sh
 
 git clone https://github.com/mstorsjo/fdk-aac.git
+cd fdk-aac
+./autogen.sh
+cd ..
 
 CONFIGURE_FLAGS="--enable-static --with-pic=yes --disable-shared"
 

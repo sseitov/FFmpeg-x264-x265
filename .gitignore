@@ -35,3 +35,13 @@ xcuserdata/
 # https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
 #
 Pods/
+
+fdk-aac-ios
+fdk-aac
+scratch-fdk
+scratch-x264
+scratch-x264
+thin-fdk
+thin-x264
+x264
+x264foriOS
