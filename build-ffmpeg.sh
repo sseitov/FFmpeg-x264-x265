@@ -3,7 +3,7 @@
 export PKG_CONFIG_PATH=`pwd`
 
 # directories
-SOURCE="ffmpeg-3.0.2"
+SOURCE="ffmpeg-3.4"
 FAT="FFmpeg-iOS"
 
 SCRATCH="scratch"
@@ -11,15 +11,21 @@ SCRATCH="scratch"
 THIN=`pwd`/"thin"
 
 # absolute path to libraries
-X264=`pwd`/FFmpeg-iOS
-FDK_AAC=`pwd`/x265foriOS
+X264=`pwd`/x264foriOS
+#X265=`pwd`/x265foriOS
+FDK_AAC=`pwd`/fdk-aac-ios
 
 CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs --pkg-config-flags="--static" \
                  --disable-doc --enable-pic --extra-cflags=-fembed-bitcode --extra-cxxflags=-fembed-bitcode"
 
 if [ "$X264" ]
 then
-	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-gpl --enable-libx264 --enable-encoder=libx264 --enable-libx265"
+	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-gpl --enable-libx264 --enable-encoder=libx264"
+fi
+
+if [ "$X266" ]
+then
+	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-gpl --enable-libx265"
 fi
 
 if [ "$FDK_AAC" ]
@@ -112,6 +118,11 @@ then
 		then
 			CFLAGS="$CFLAGS -I$X264/include"
 			LDFLAGS="$LDFLAGS -L$X264/lib -lc++"
+		fi
+		if [ "$X265" ]
+		then
+			CFLAGS="$CFLAGS -I$X265/include"
+			LDFLAGS="$LDFLAGS -L$X265/lib -lc++"
 		fi
 		if [ "$FDK_AAC" ]
 		then
