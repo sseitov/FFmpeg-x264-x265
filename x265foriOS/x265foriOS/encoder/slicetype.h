@@ -120,6 +120,7 @@ public:
     int           m_cuCount;
     int           m_numCoopSlices;
     int           m_numRowsPerSlice;
+    int           m_inputCount;
     double        m_cuTreeStrength;
 
     bool          m_isActive;
@@ -131,6 +132,7 @@ public:
     bool          m_filled;
     bool          m_isSceneTransition;
     int           m_numPools;
+    bool          m_extendGopBoundary;
     Lookahead(x265_param *param, ThreadPool *pool);
 #if DETAILED_CU_STATS
     int64_t       m_slicetypeDecideElapsedTime;
@@ -151,7 +153,7 @@ public:
     Frame*  getDecidedPicture();
 
     void    getEstimatedPictureCost(Frame *pic);
-
+    void    setLookaheadQueue();
 
 protected:
 

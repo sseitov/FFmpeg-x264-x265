@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2C77DF0920624FF2001041A5 /* winxp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C77DF0720624FF2001041A5 /* winxp.cpp */; };
 		4E3EC7751ED92CD4007DBC4D /* x265.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E3EC7731ED92CD4007DBC4D /* x265.cpp */; };
 		4E3EC79C1ED92DCA007DBC4D /* analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E3EC78A1ED92DCA007DBC4D /* analysis.cpp */; };
 		4E3EC79D1ED92DCA007DBC4D /* api.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E3EC78B1ED92DCA007DBC4D /* api.cpp */; };
@@ -78,6 +79,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2C77DF0720624FF2001041A5 /* winxp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = winxp.cpp; sourceTree = "<group>"; };
+		2C77DF0820624FF2001041A5 /* winxp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = winxp.h; sourceTree = "<group>"; };
 		4E3EC3971ED9283D007DBC4D /* libx265foriOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libx265foriOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E3EC67D1ED92892007DBC4D /* x265_config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = x265_config.h; sourceTree = "<group>"; };
 		4E3EC7731ED92CD4007DBC4D /* x265.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = x265.cpp; sourceTree = "<group>"; };
@@ -240,6 +243,8 @@
 		4E3EC7761ED92DB3007DBC4D /* common */ = {
 			isa = PBXGroup;
 			children = (
+				2C77DF0720624FF2001041A5 /* winxp.cpp */,
+				2C77DF0820624FF2001041A5 /* winxp.h */,
 				4E3EC7E81ED92DDC007DBC4D /* bitstream.h */,
 				4E3EC7E91ED92DDC007DBC4D /* common.h */,
 				4E3EC7EA1ED92DDC007DBC4D /* constants.h */,
@@ -397,7 +402,7 @@
 		4E3EC38F1ED9283D007DBC4D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0830;
+				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = "Ruiwen Feng";
 				TargetAttributes = {
 					4E3EC3961ED9283D007DBC4D = {
@@ -463,6 +468,7 @@
 				4E3EC7E61ED92DD4007DBC4D /* wavefront.cpp in Sources */,
 				4E3EC8271ED9498F007DBC4D /* y4m.cpp in Sources */,
 				4E3EC7A81ED92DCA007DBC4D /* reference.cpp in Sources */,
+				2C77DF0920624FF2001041A5 /* winxp.cpp in Sources */,
 				4E3EC7D41ED92DD4007DBC4D /* intrapred.cpp in Sources */,
 				4E3EC7A11ED92DCA007DBC4D /* entropy.cpp in Sources */,
 				4E3EC7A91ED92DCA007DBC4D /* sao.cpp in Sources */,
@@ -501,7 +507,9 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
@@ -509,7 +517,11 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -549,7 +561,9 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
@@ -557,7 +571,11 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;

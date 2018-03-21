@@ -16,7 +16,7 @@
 #define HIGH_BIT_DEPTH 0
 #define X265_DEPTH 8
 #define EXPORT_C_API 1
-#define X265_NS x265
+//#define X265_NS x265
 #define HAVE_STRTOK_R 1
 
 #endif

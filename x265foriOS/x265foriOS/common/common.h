@@ -75,11 +75,10 @@
 #define ALIGN_VAR_8(T, var)  T var __attribute__((aligned(8)))
 #define ALIGN_VAR_16(T, var) T var __attribute__((aligned(16)))
 #define ALIGN_VAR_32(T, var) T var __attribute__((aligned(32)))
-
 #if defined(__MINGW32__)
 #define fseeko fseeko64
+#define ftello ftello64
 #endif
-
 #elif defined(_MSC_VER)
 
 #define ALIGN_VAR_4(T, var)  __declspec(align(4)) T var
@@ -87,9 +86,8 @@
 #define ALIGN_VAR_16(T, var) __declspec(align(16)) T var
 #define ALIGN_VAR_32(T, var) __declspec(align(32)) T var
 #define fseeko _fseeki64
-
+#define ftello _ftelli64
 #endif // if defined(__GNUC__)
-
 #if HAVE_INT_TYPES_H
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -207,7 +205,6 @@ typedef int16_t  coeff_t;      // transform coefficient
 
 // arbitrary, but low because SATD scores are 1/4 normal
 #define X265_LOOKAHEAD_QP (12 + QP_BD_OFFSET)
-#define X265_LOOKAHEAD_MAX 250
 
 // Use the same size blocks as x264.  Using larger blocks seems to give artificially
 // high cost estimates (intra and inter both suffer)
@@ -259,7 +256,6 @@ typedef int16_t  coeff_t;      // transform coefficient
 #define LOG2_RASTER_SIZE        (MAX_LOG2_CU_SIZE - LOG2_UNIT_SIZE)
 #define RASTER_SIZE             (1 << LOG2_RASTER_SIZE)
 #define MAX_NUM_PARTITIONS      (RASTER_SIZE * RASTER_SIZE)
-#define NUM_4x4_PARTITIONS      (1U << (g_unitSizeDepth << 1)) // number of 4x4 units in max CU size
 
 #define MIN_PU_SIZE             4
 #define MIN_TU_SIZE             4

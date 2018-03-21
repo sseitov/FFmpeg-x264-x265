@@ -132,6 +132,7 @@ public:
     bool   m_isGrainEnabled;
     bool   m_isAbrReset;
     bool   m_isNextGop;
+    bool   m_initVbv;
     int    m_lastAbrResetPoc;
 
     double m_rateTolerance;
@@ -244,7 +245,7 @@ public:
     int  rateControlStart(Frame* curFrame, RateControlEntry* rce, Encoder* enc);
     void rateControlUpdateStats(RateControlEntry* rce);
     int  rateControlEnd(Frame* curFrame, int64_t bits, RateControlEntry* rce, int *filler);
-    int  rowVbvRateControl(Frame* curFrame, uint32_t row, RateControlEntry* rce, double& qpVbv);
+    int  rowVbvRateControl(Frame* curFrame, uint32_t row, RateControlEntry* rce, double& qpVbv, uint32_t* m_sliceBaseRow, uint32_t sliceId);
     int  rateControlSliceType(int frameNum);
     bool cuTreeReadFor2Pass(Frame* curFrame);
     void hrdFullness(SEIBufferingPeriod* sei);

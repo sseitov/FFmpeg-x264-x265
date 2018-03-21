@@ -56,13 +56,15 @@ bool Lowres::create(PicYuv *origPic, int _bframes, bool bAQEnabled, uint32_t qgS
     if (bAQEnabled)
     {
         CHECKED_MALLOC_ZERO(qpAqOffset, double, cuCountFullRes);
-        CHECKED_MALLOC_ZERO(qpAqMotionOffset, double, cuCountFullRes);
         CHECKED_MALLOC_ZERO(invQscaleFactor, int, cuCountFullRes);
         CHECKED_MALLOC_ZERO(qpCuTreeOffset, double, cuCountFullRes);
-        CHECKED_MALLOC_ZERO(blockVariance, uint32_t, cuCountFullRes);
         if (qgSize == 8)
             CHECKED_MALLOC_ZERO(invQscaleFactor8x8, int, cuCount);
     }
+       if (origPic->m_param->bAQMotion)
+               CHECKED_MALLOC_ZERO(qpAqMotionOffset, double, cuCountFullRes);
+    if (origPic->m_param->bDynamicRefine)
+        CHECKED_MALLOC_ZERO(blockVariance, uint32_t, cuCountFullRes);
     CHECKED_MALLOC(propagateCost, uint16_t, cuCount);
 
     /* allocate lowres buffers */
@@ -89,7 +91,7 @@ bool Lowres::create(PicYuv *origPic, int _bframes, bool bAQEnabled, uint32_t qgS
         }
     }
 
-    for (int i = 0; i < bframes + 1; i++)
+    for (int i = 0; i < bframes + 2; i++)
     {
         CHECKED_MALLOC(lowresMvs[0][i], MV, cuCount);
         CHECKED_MALLOC(lowresMvs[1][i], MV, cuCount);
@@ -118,7 +120,7 @@ void Lowres::destroy()
         }
     }
 
-    for (int i = 0; i < bframes + 1; i++)
+    for (int i = 0; i < bframes + 2; i++)
     {
         X265_FREE(lowresMvs[0][i]);
         X265_FREE(lowresMvs[1][i]);
@@ -126,14 +128,13 @@ void Lowres::destroy()
         X265_FREE(lowresMvCosts[1][i]);
     }
     X265_FREE(qpAqOffset);
-    X265_FREE(qpAqMotionOffset);
     X265_FREE(invQscaleFactor);
     X265_FREE(qpCuTreeOffset);
     X265_FREE(propagateCost);
+       X265_FREE(invQscaleFactor8x8);
+       X265_FREE(qpAqMotionOffset);
     X265_FREE(blockVariance);
-    X265_FREE(invQscaleFactor8x8);
 }
-
 // (re) initialize lowres state
 void Lowres::init(PicYuv *origPic, int poc)
 {
@@ -152,7 +153,7 @@ void Lowres::init(PicYuv *origPic, int poc)
         for (int x = 0; x < bframes + 2; x++)
             rowSatds[y][x][0] = -1;
 
-    for (int i = 0; i < bframes + 1; i++)
+    for (int i = 0; i < bframes + 2; i++)
     {
         lowresMvs[0][i][0].x = 0x7FFF;
         lowresMvs[1][i][0].x = 0x7FFF;
@@ -160,6 +161,9 @@ void Lowres::init(PicYuv *origPic, int poc)
 
     for (int i = 0; i < bframes + 2; i++)
         intraMbs[i] = 0;
+    if (origPic->m_param->rc.vbvBufferSize)
+        for (int i = 0; i < X265_LOOKAHEAD_MAX + 1; i++)
+            plannedType[i] = X265_TYPE_AUTO;
 
     /* downscale and generate 4 hpel planes for lookahead */
     primitives.frameInitLowres(origPic->m_picOrg[0],

@@ -120,8 +120,8 @@ bool Search::initSearch(const x265_param& param, ScalingList& scalingList)
             CHECKED_MALLOC(m_rqt[i].coeffRQT[0], coeff_t, sizeL + sizeC * 2);
             m_rqt[i].coeffRQT[1] = m_rqt[i].coeffRQT[0] + sizeL;
             m_rqt[i].coeffRQT[2] = m_rqt[i].coeffRQT[0] + sizeL + sizeC;
-            ok &= m_rqt[i].reconQtYuv.create(g_maxCUSize, param.internalCsp);
-            ok &= m_rqt[i].resiQtYuv.create(g_maxCUSize, param.internalCsp);
+            ok &= m_rqt[i].reconQtYuv.create(param.maxCUSize, param.internalCsp);
+            ok &= m_rqt[i].resiQtYuv.create(param.maxCUSize, param.internalCsp);
         }
     }
     else
@@ -130,15 +130,15 @@ bool Search::initSearch(const x265_param& param, ScalingList& scalingList)
         {
             CHECKED_MALLOC(m_rqt[i].coeffRQT[0], coeff_t, sizeL);
             m_rqt[i].coeffRQT[1] = m_rqt[i].coeffRQT[2] = NULL;
-            ok &= m_rqt[i].reconQtYuv.create(g_maxCUSize, param.internalCsp);
-            ok &= m_rqt[i].resiQtYuv.create(g_maxCUSize, param.internalCsp);
+            ok &= m_rqt[i].reconQtYuv.create(param.maxCUSize, param.internalCsp);
+            ok &= m_rqt[i].resiQtYuv.create(param.maxCUSize, param.internalCsp);
         }
     }
 
     /* the rest of these buffers are indexed per-depth */
-    for (uint32_t i = 0; i <= g_maxCUDepth; i++)
+    for (uint32_t i = 0; i <= m_param->maxCUDepth; i++)
     {
-        int cuSize = g_maxCUSize >> i;
+        int cuSize = param.maxCUSize >> i;
         ok &= m_rqt[i].tmpResiYuv.create(cuSize, param.internalCsp);
         ok &= m_rqt[i].tmpPredYuv.create(cuSize, param.internalCsp);
         ok &= m_rqt[i].bidirPredYuv[0].create(cuSize, param.internalCsp);
@@ -186,7 +186,7 @@ Search::~Search()
         m_rqt[i].resiQtYuv.destroy();
     }
 
-    for (uint32_t i = 0; i <= g_maxCUDepth; i++)
+    for (uint32_t i = 0; i <= m_param->maxCUDepth; i++)
     {
         m_rqt[i].tmpResiYuv.destroy();
         m_rqt[i].tmpPredYuv.destroy();
@@ -1947,7 +1947,7 @@ MV Search::getLowresMV(const CUData& cu, const PredictionUnit& pu, int list, int
         /* poc difference is out of range for lookahead */
         return 0;
 
-    MV* mvs = m_frame->m_lowres.lowresMvs[list][diffPoc - 1];
+    MV* mvs = m_frame->m_lowres.lowresMvs[list][diffPoc];
     if (mvs[0].x == 0x7FFF)
         /* this motion search was not estimated by lookahead */
         return 0;
@@ -2073,7 +2073,7 @@ void Search::singleMotionEstimation(Search& master, Mode& interMode, const Predi
     int mvpIdx = selectMVP(interMode.cu, pu, amvp, list, ref);
     MV mvmin, mvmax, outmv, mvp = amvp[mvpIdx];
 
-    if (!m_param->analysisMode) /* Prevents load/save outputs from diverging if lowresMV is not available */
+    if (!m_param->analysisSave && !m_param->analysisLoad) /* Prevents load/save outputs from diverging if lowresMV is not available */
     {
         MV lmv = getLowresMV(interMode.cu, pu, list, ref);
         if (lmv.notZero())
@@ -2082,7 +2082,7 @@ void Search::singleMotionEstimation(Search& master, Mode& interMode, const Predi
 
     setSearchRange(interMode.cu, mvp, m_param->searchRange, mvmin, mvmax);
 
-    int satdCost = m_me.motionEstimate(&m_slice->m_mref[list][ref], mvmin, mvmax, mvp, numMvc, mvc, m_param->searchRange, outmv, 
+    int satdCost = m_me.motionEstimate(&m_slice->m_mref[list][ref], mvmin, mvmax, mvp, numMvc, mvc, m_param->searchRange, outmv, m_param->maxSlices, 
       m_param->bSourceReferenceEstimation ? m_slice->m_refFrameList[list][ref]->m_fencPic->getLumaAddr(0) : 0);
 
     /* Get total cost of partition, but only include MV bit cost once */
@@ -2107,7 +2107,24 @@ void Search::singleMotionEstimation(Search& master, Mode& interMode, const Predi
         bestME[list].mvCost  = mvCost;
     }
 }
-
+void Search::searchMV(Mode& interMode, const PredictionUnit& pu, int list, int ref, MV& outmv, MV mvp, int numMvc, MV* mvc)
+{
+    CUData& cu = interMode.cu;
+    const Slice *slice = m_slice;
+    MV mv;
+    if (m_param->interRefine == 1)
+        mv = mvp;
+    else
+        mv = cu.m_mv[list][pu.puAbsPartIdx];
+    cu.clipMv(mv);
+    MV mvmin, mvmax;
+    setSearchRange(cu, mv, m_param->searchRange, mvmin, mvmax);
+    if (m_param->interRefine == 1)
+        m_me.motionEstimate(&m_slice->m_mref[list][ref], mvmin, mvmax, mv, numMvc, mvc, m_param->searchRange, outmv, m_param->maxSlices,
+        m_param->bSourceReferenceEstimation ? m_slice->m_refFrameList[list][ref]->m_fencPic->getLumaAddr(0) : 0);
+    else
+        m_me.refineMV(&slice->m_mref[list][ref], mvmin, mvmax, mv, outmv);
+}
 /* find the best inter prediction for each PU of specified mode */
 void Search::predInterSearch(Mode& interMode, const CUGeom& cuGeom, bool bChromaMC, uint32_t refMasks[2])
 {
@@ -2127,20 +2144,29 @@ void Search::predInterSearch(Mode& interMode, const CUGeom& cuGeom, bool bChroma
     int      totalmebits = 0;
     MV       mvzero(0, 0);
     Yuv&     tmpPredYuv = m_rqt[cuGeom.depth].tmpPredYuv;
-
     MergeData merge;
     memset(&merge, 0, sizeof(merge));
-
+    bool useAsMVP = false;
     for (int puIdx = 0; puIdx < numPart; puIdx++)
     {
         MotionData* bestME = interMode.bestME[puIdx];
         PredictionUnit pu(cu, cuGeom, puIdx);
-
         m_me.setSourcePU(*interMode.fencYuv, pu.ctuAddr, pu.cuAbsPartIdx, pu.puAbsPartIdx, pu.width, pu.height, m_param->searchMethod, m_param->subpelRefine, bChromaMC);
-
+        useAsMVP = false;
+        analysis_inter_data* interDataCTU = NULL;
+        int cuIdx;
+        cuIdx = (interMode.cu.m_cuAddr * m_param->num4x4Partitions) + cuGeom.absPartIdx;
+        if (m_param->analysisReuseLevel == 10 && m_param->interRefine > 1)
+        {
+            interDataCTU = (analysis_inter_data*)m_frame->m_analysisData.interData;
+            if ((cu.m_predMode[pu.puAbsPartIdx] == interDataCTU->modes[cuIdx + pu.puAbsPartIdx])
+                && (cu.m_partSize[pu.puAbsPartIdx] == interDataCTU->partSize[cuIdx + pu.puAbsPartIdx])
+                && !(interDataCTU->mergeFlag[cuIdx + puIdx])
+                && (cu.m_cuDepth[0] == interDataCTU->depth[cuIdx]))
+                useAsMVP = true;
+        }
         /* find best cost merge candidate. note: 2Nx2N merge and bidir are handled as separate modes */
         uint32_t mrgCost = numPart == 1 ? MAX_UINT : mergeEstimation(cu, cuGeom, pu, puIdx, merge);
-
         bestME[0].cost = MAX_UINT;
         bestME[1].cost = MAX_UINT;
 
@@ -2148,26 +2174,37 @@ void Search::predInterSearch(Mode& interMode, const CUGeom& cuGeom, bool bChroma
         bool bDoUnidir = true;
 
         cu.getNeighbourMV(puIdx, pu.puAbsPartIdx, interMode.interNeighbours);
-
         /* Uni-directional prediction */
-        if ((m_param->analysisMode == X265_ANALYSIS_LOAD && m_param->analysisRefineLevel > 1)
-            || (m_param->analysisMultiPassRefine && m_param->rc.bStatRead))
+        if ((m_param->analysisLoad && m_param->analysisReuseLevel > 1 && m_param->analysisReuseLevel != 10)
+            || (m_param->analysisMultiPassRefine && m_param->rc.bStatRead) || (m_param->bMVType == AVC_INFO) || (useAsMVP))
         {
             for (int list = 0; list < numPredDir; list++)
             {
-                int ref = bestME[list].ref;
-                if (ref < 0)
-                    continue;
 
+                int ref = -1;
+                if (useAsMVP)
+                    ref = interDataCTU->refIdx[list][cuIdx + puIdx];
+
+                else
+                    ref = bestME[list].ref;
+                if (ref < 0)
+                {
+                    continue;
+                }
                 uint32_t bits = m_listSelBits[list] + MVP_IDX_BITS;
                 bits += getTUBits(ref, numRefIdx[list]);
 
                 int numMvc = cu.getPMV(interMode.interNeighbours, list, ref, interMode.amvpCand[list][ref], mvc);
-
                 const MV* amvp = interMode.amvpCand[list][ref];
                 int mvpIdx = selectMVP(cu, pu, amvp, list, ref);
-                MV mvmin, mvmax, outmv, mvp = amvp[mvpIdx];
-
+                MV mvmin, mvmax, outmv, mvp;
+                if (useAsMVP)
+                {
+                    mvp = interDataCTU->mv[list][cuIdx + puIdx];
+                    mvpIdx = interDataCTU->mvpIdx[list][cuIdx + puIdx];
+                }
+                else
+                    mvp = amvp[mvpIdx];
                 if (m_param->searchMethod == X265_SEA)
                 {
                     int puX = puIdx & 1;
@@ -2180,16 +2217,15 @@ void Search::predInterSearch(Mode& interMode, const CUGeom& cuGeom, bool bChroma
                 if (m_param->analysisMultiPassRefine && m_param->rc.bStatRead && mvpIdx == bestME[list].mvpIdx)
                     mvpIn = bestME[list].mv;
                     
-                int satdCost = m_me.motionEstimate(&slice->m_mref[list][ref], mvmin, mvmax, mvpIn, numMvc, mvc, m_param->searchRange, outmv,
+                int satdCost = m_me.motionEstimate(&slice->m_mref[list][ref], mvmin, mvmax, mvpIn, numMvc, mvc, m_param->searchRange, outmv, m_param->maxSlices, 
                   m_param->bSourceReferenceEstimation ? m_slice->m_refFrameList[list][ref]->m_fencPic->getLumaAddr(0) : 0);
 
                 /* Get total cost of partition, but only include MV bit cost once */
                 bits += m_me.bitcost(outmv);
                 uint32_t mvCost = m_me.mvcost(outmv);
                 uint32_t cost = (satdCost - mvCost) + m_rdCost.getCost(bits);
-
                 /* Refine MVP selection, updates: mvpIdx, bits, cost */
-                if (!m_param->analysisMultiPassRefine)
+                if (!(m_param->analysisMultiPassRefine || useAsMVP))
                     mvp = checkBestMVP(amvp, outmv, mvpIdx, bits, cost);
                 else
                 {
@@ -2214,6 +2250,7 @@ void Search::predInterSearch(Mode& interMode, const CUGeom& cuGeom, bool bChroma
                     bestME[list].cost = cost;
                     bestME[list].bits = bits;
                     bestME[list].mvCost  = mvCost;
+                    bestME[list].ref = ref;
                 }
                 bDoUnidir = false;
             }            
@@ -2286,7 +2323,7 @@ void Search::predInterSearch(Mode& interMode, const CUGeom& cuGeom, bool bChroma
                     int mvpIdx = selectMVP(cu, pu, amvp, list, ref);
                     MV mvmin, mvmax, outmv, mvp = amvp[mvpIdx];
 
-                    if (!m_param->analysisMode) /* Prevents load/save outputs from diverging when lowresMV is not available */
+                    if (!m_param->analysisSave && !m_param->analysisLoad) /* Prevents load/save outputs from diverging when lowresMV is not available */
                     {
                         MV lmv = getLowresMV(cu, pu, list, ref);
                         if (lmv.notZero())
@@ -2300,7 +2337,7 @@ void Search::predInterSearch(Mode& interMode, const CUGeom& cuGeom, bool bChroma
                             m_me.integral[planes] = interMode.fencYuv->m_integral[list][ref][planes] + puX * pu.width + puY * pu.height * m_slice->m_refFrameList[list][ref]->m_reconPic->m_stride;
                     }
                     setSearchRange(cu, mvp, m_param->searchRange, mvmin, mvmax);
-                    int satdCost = m_me.motionEstimate(&slice->m_mref[list][ref], mvmin, mvmax, mvp, numMvc, mvc, m_param->searchRange, outmv, 
+                    int satdCost = m_me.motionEstimate(&slice->m_mref[list][ref], mvmin, mvmax, mvp, numMvc, mvc, m_param->searchRange, outmv, m_param->maxSlices, 
                       m_param->bSourceReferenceEstimation ? m_slice->m_refFrameList[list][ref]->m_fencPic->getLumaAddr(0) : 0);
 
                     /* Get total cost of partition, but only include MV bit cost once */
@@ -2582,11 +2619,11 @@ void Search::setSearchRange(const CUData& cu, const MV& mvp, int merange, MV& mv
     cu.clipMv(mvmax);
 
     if (cu.m_encData->m_param->bIntraRefresh && m_slice->m_sliceType == P_SLICE &&
-          cu.m_cuPelX / g_maxCUSize < m_frame->m_encData->m_pir.pirStartCol &&
+          cu.m_cuPelX / m_param->maxCUSize < m_frame->m_encData->m_pir.pirStartCol &&
           m_slice->m_refFrameList[0][0]->m_encData->m_pir.pirEndCol < m_slice->m_sps->numCuInWidth)
     {
         int safeX, maxSafeMv;
-        safeX = m_slice->m_refFrameList[0][0]->m_encData->m_pir.pirEndCol * g_maxCUSize - 3;
+        safeX = m_slice->m_refFrameList[0][0]->m_encData->m_pir.pirEndCol * m_param->maxCUSize - 3;
         maxSafeMv = (safeX - cu.m_cuPelX) * 4;
         mvmax.x = X265_MIN(mvmax.x, maxSafeMv);
         mvmin.x = X265_MIN(mvmin.x, maxSafeMv);

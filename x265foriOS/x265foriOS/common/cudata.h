@@ -161,8 +161,8 @@ class CUData
 {
 public:
 
-    static cubcast_t s_partSet[NUM_FULL_DEPTH]; // pointer to broadcast set functions per absolute depth
-    static uint32_t  s_numPartInCUSize;
+    cubcast_t s_partSet[NUM_FULL_DEPTH]; // pointer to broadcast set functions per absolute depth
+    uint32_t  s_numPartInCUSize;
 
     bool          m_vbvAffected;
 
@@ -199,13 +199,14 @@ public:
     uint8_t*      m_predMode;         // array of prediction modes
     uint8_t*      m_partSize;         // array of partition sizes
     uint8_t*      m_mergeFlag;        // array of merge flags
+    uint8_t*      m_skipFlag[2];
     uint8_t*      m_interDir;         // array of inter directions
     uint8_t*      m_mvpIdx[2];        // array of motion vector predictor candidates or merge candidate indices [0]
     uint8_t*      m_tuDepth;          // array of transform indices
     uint8_t*      m_transformSkip[3]; // array of transform skipping flags per plane
     uint8_t*      m_cbf[3];           // array of coded block flags (CBF) per plane
     uint8_t*      m_chromaIntraDir;   // array of intra directions (chroma)
-    enum { BytesPerPartition = 21 };  // combined sizeof() of all per-part data
+    enum { BytesPerPartition = 23 };  // combined sizeof() of all per-part data
 
     sse_t*        m_distortion;
     coeff_t*      m_trCoeff[3];       // transformed coefficient buffer per plane
@@ -223,9 +224,14 @@ public:
     uint64_t      m_fAc_den[3];
     uint64_t      m_fDc_den[3];
 
+    /* Feature values per CTU for dynamic refinement */
+    uint64_t*       m_collectCURd;
+    uint32_t*       m_collectCUVariance;
+    uint32_t*       m_collectCUCount;
+
     CUData();
 
-    void     initialize(const CUDataMemPool& dataPool, uint32_t depth, int csp, int instance);
+    void     initialize(const CUDataMemPool& dataPool, uint32_t depth, const x265_param& param, int instance);
     static void calcCTUGeoms(uint32_t ctuWidth, uint32_t ctuHeight, uint32_t maxCUSize, uint32_t minCUSize, CUGeom cuDataArray[CUGeom::MAX_GEOMS]);
 
     void     initCTU(const Frame& frame, uint32_t cuAddr, int qp, uint32_t firstRowInSlice, uint32_t lastRowInSlice, uint32_t lastCUInSlice);
@@ -271,7 +277,7 @@ public:
     void     getInterTUQtDepthRange(uint32_t tuDepthRange[2], uint32_t absPartIdx) const;
     uint32_t getBestRefIdx(uint32_t subPartIdx) const { return ((m_interDir[subPartIdx] & 1) << m_refIdx[0][subPartIdx]) | 
                                                               (((m_interDir[subPartIdx] >> 1) & 1) << (m_refIdx[1][subPartIdx] + 16)); }
-    uint32_t getPUOffset(uint32_t puIdx, uint32_t absPartIdx) const { return (partAddrTable[(int)m_partSize[absPartIdx]][puIdx] << (g_unitSizeDepth - m_cuDepth[absPartIdx]) * 2) >> 4; }
+    uint32_t getPUOffset(uint32_t puIdx, uint32_t absPartIdx) const { return (partAddrTable[(int)m_partSize[absPartIdx]][puIdx] << (m_slice->m_param->unitSizeDepth - m_cuDepth[absPartIdx]) * 2) >> 4; }
 
     uint32_t getNumPartInter(uint32_t absPartIdx) const              { return nbPartsTable[(int)m_partSize[absPartIdx]]; }
     bool     isIntra(uint32_t absPartIdx) const   { return m_predMode[absPartIdx] == MODE_INTRA; }
@@ -285,7 +291,7 @@ public:
     void     getAllowedChromaDir(uint32_t absPartIdx, uint32_t* modeList) const;
     int      getIntraDirLumaPredictor(uint32_t absPartIdx, uint32_t* intraDirPred) const;
 
-    uint32_t getSCUAddr() const                  { return (m_cuAddr << g_unitSizeDepth * 2) + m_absIdxInCTU; }
+    uint32_t getSCUAddr() const                  { return (m_cuAddr << m_slice->m_param->unitSizeDepth * 2) + m_absIdxInCTU; }
     uint32_t getCtxSplitFlag(uint32_t absPartIdx, uint32_t depth) const;
     uint32_t getCtxSkipFlag(uint32_t absPartIdx) const;
     void     getTUEntropyCodingParameters(TUEntropyCodingParameters &result, uint32_t absPartIdx, uint32_t log2TrSize, bool bIsLuma) const;
@@ -350,10 +356,10 @@ struct CUDataMemPool
 
     CUDataMemPool() { charMemBlock = NULL; trCoeffMemBlock = NULL; mvMemBlock = NULL; distortionMemBlock = NULL; }
 
-    bool create(uint32_t depth, uint32_t csp, uint32_t numInstances)
+    bool create(uint32_t depth, uint32_t csp, uint32_t numInstances, const x265_param& param)
     {
-        uint32_t numPartition = NUM_4x4_PARTITIONS >> (depth * 2);
-        uint32_t cuSize = g_maxCUSize >> depth;
+        uint32_t numPartition = param.num4x4Partitions >> (depth * 2);
+        uint32_t cuSize = param.maxCUSize >> depth;
         uint32_t sizeL = cuSize * cuSize;
         if (csp == X265_CSP_I400)
         {

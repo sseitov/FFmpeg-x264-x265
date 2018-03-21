@@ -110,6 +110,9 @@ public:
     bool      m_bChromaSa8d;
     bool      m_bHD;
 
+    bool      m_modeFlag[2];
+    bool      m_checkMergeAndSkipOnly[2];
+
     Analysis();
 
     bool create(ThreadLocalData* tld);
@@ -137,11 +140,36 @@ protected:
     int*                    m_multipassMvpIdx[2];
     int32_t*                m_multipassRef[2];
     uint8_t*                m_multipassModes;
+
+    uint8_t                 m_evaluateInter;
+    int32_t                 m_refineLevel;
+
+    uint8_t*                m_additionalCtuInfo;
+    int*                    m_prevCtuInfoChange;
+
+    struct TrainingData
+    {
+        uint32_t cuVariance;
+        uint8_t predMode;
+        uint8_t partSize;
+        uint8_t mergeFlag;
+        int split;
+
+        void init(const CUData& parentCTU, const CUGeom& cuGeom)
+        {
+            cuVariance = 0;
+            predMode = parentCTU.m_predMode[cuGeom.absPartIdx];
+            partSize = parentCTU.m_partSize[cuGeom.absPartIdx];
+            mergeFlag = parentCTU.m_mergeFlag[cuGeom.absPartIdx];
+            split = 0;
+        }
+    };
+
     /* refine RD based on QP for rd-levels 5 and 6 */
     void qprdRefine(const CUData& parentCTU, const CUGeom& cuGeom, int32_t qp, int32_t lqp);
 
     /* full analysis for an I-slice CU */
-    void compressIntraCU(const CUData& parentCTU, const CUGeom& cuGeom, int32_t qp);
+    uint64_t compressIntraCU(const CUData& parentCTU, const CUGeom& cuGeom, int32_t qp);
 
     /* full analysis for a P or B slice CU */
     uint32_t compressInterCU_dist(const CUData& parentCTU, const CUGeom& cuGeom, int32_t qp);
@@ -175,9 +203,16 @@ protected:
     void encodeResidue(const CUData& parentCTU, const CUGeom& cuGeom);
 
     int calculateQpforCuSize(const CUData& ctu, const CUGeom& cuGeom, int32_t complexCheck = 0, double baseQP = -1);
+    uint32_t calculateCUVariance(const CUData& ctu, const CUGeom& cuGeom);
+
+    void classifyCU(const CUData& ctu, const CUGeom& cuGeom, const Mode& bestMode, TrainingData& trainData);
+    void trainCU(const CUData& ctu, const CUGeom& cuGeom, const Mode& bestMode, TrainingData& trainData);
 
     void calculateNormFactor(CUData& ctu, int qp);
     void normFactor(const pixel* src, uint32_t blockSize, CUData& ctu, int qp, TextType ttype);
+
+    void collectPUStatistics(const CUData& ctu, const CUGeom& cuGeom);
+
     /* check whether current mode is the new best */
     inline void checkBestMode(Mode& mode, uint32_t depth)
     {
@@ -190,6 +225,7 @@ protected:
         else
             md.bestMode = &mode;
     }
+    int findSameContentRefCount(const CUData& parentCTU, const CUGeom& cuGeom);
 };
 
 struct ThreadLocalData

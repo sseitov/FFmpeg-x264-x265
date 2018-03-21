@@ -360,6 +360,7 @@ public:
     int         m_iPPSQpMinus26;
     int         numRefIdxDefault[2];
     int         m_iNumRPSInSPS;
+    const x265_param *m_param;
 
     Slice()
     {
@@ -384,14 +385,14 @@ public:
     bool getRapPicFlag() const
     {
         return m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+            || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
             || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA;
     }
-
     bool getIdrPicFlag() const
     {
-        return m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL;
+        return m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+            || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP;
     }
-
     bool isIRAP() const   { return m_nalUnitType >= 16 && m_nalUnitType <= 23; }
 
     bool isIntra()  const { return m_sliceType == I_SLICE; }
