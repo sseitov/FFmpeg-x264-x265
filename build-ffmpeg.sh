@@ -12,7 +12,7 @@ THIN=`pwd`/"thin"
 
 # absolute path to libraries
 X264=`pwd`/FFmpeg-iOS
-#FDK_AAC=`pwd`/fdk-aac/fdk-aac-ios
+FDK_AAC=`pwd`/x265foriOS
 
 CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs --pkg-config-flags="--static" \
                  --disable-doc --enable-pic --extra-cflags=-fembed-bitcode --extra-cxxflags=-fembed-bitcode"

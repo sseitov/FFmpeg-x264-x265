@@ -1,18 +1,18 @@
 #!/bin/sh
 
-git clone -b stable git://git.videolan.org/x264.git
+git clone https://github.com/mstorsjo/fdk-aac.git
 
-CONFIGURE_FLAGS="--enable-static --enable-pic --disable-cli"
+CONFIGURE_FLAGS="--enable-static --with-pic=yes --disable-shared"
 
-ARCHS="x86_64 arm64 armv7"
+ARCHS="arm64 x86_64 armv7"
 
 # directories
-SOURCE="x264"
-FAT="x264foriOS"
+SOURCE="fdk-aac"
+FAT="fdk-aac-ios"
 
-SCRATCH="scratch-x264"
+SCRATCH="scratch-fdk"
 # must be an absolute path
-THIN=`pwd`/"thin-x264"
+THIN=`pwd`/"thin-fdk"
 
 COMPILE="y"
 LIPO="y"
@@ -41,8 +41,8 @@ then
 		echo "building $ARCH..."
 		mkdir -p "$SCRATCH/$ARCH"
 		cd "$SCRATCH/$ARCH"
+
 		CFLAGS="-arch $ARCH"
-                ASFLAGS=
 
 		if [ "$ARCH" = "i386" -o "$ARCH" = "x86_64" ]
 		then
@@ -51,45 +51,42 @@ then
 		    if [ "$ARCH" = "x86_64" ]
 		    then
 		    	CFLAGS="$CFLAGS -mios-simulator-version-min=7.0"
-		    	HOST=
+			HOST="--host=x86_64-apple-darwin"
 		    else
-		    	CFLAGS="$CFLAGS -mios-simulator-version-min=5.0"
+		    	CFLAGS="$CFLAGS -mios-simulator-version-min=7.0"
 			HOST="--host=i386-apple-darwin"
 		    fi
 		else
 		    PLATFORM="iPhoneOS"
-		    if [ $ARCH = "arm64" ]
+		    if [ $ARCH = arm64 ]
 		    then
 		        HOST="--host=aarch64-apple-darwin"
-			XARCH="-arch aarch64"
-		    else
+                    else
 		        HOST="--host=arm-apple-darwin"
-			XARCH="-arch arm"
-		    fi
-                    CFLAGS="$CFLAGS -fembed-bitcode -mios-version-min=7.0"
-                    ASFLAGS="$CFLAGS"
+	            fi
+		    CFLAGS="$CFLAGS -fembed-bitcode"
 		fi
 
 		XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
-		CC="xcrun -sdk $XCRUN_SDK clang"
-		if [ $PLATFORM = "iPhoneOS" ]
-		then
-		    export AS="$CWD/$SOURCE/tools/gas-preprocessor.pl $XARCH -- $CC"
-		else
-		    export -n AS
-		fi
+		CC="xcrun -sdk $XCRUN_SDK clang -Wno-error=unused-command-line-argument-hard-error-in-future"
+		AS="$CWD/$SOURCE/extras/gas-preprocessor.pl $CC"
 		CXXFLAGS="$CFLAGS"
 		LDFLAGS="$CFLAGS"
 
-		CC=$CC $CWD/$SOURCE/configure \
+		$CWD/$SOURCE/configure \
 		    $CONFIGURE_FLAGS \
 		    $HOST \
-		    --extra-cflags="$CFLAGS" \
-		    --extra-asflags="$ASFLAGS" \
-		    --extra-ldflags="$LDFLAGS" \
-		    --prefix="$THIN/$ARCH" || exit 1
+		    $CPU \
+		    CC="$CC" \
+		    CXX="$CC" \
+		    CPP="$CC -E" \
+                    AS="$AS" \
+		    CFLAGS="$CFLAGS" \
+		    LDFLAGS="$LDFLAGS" \
+		    CPPFLAGS="$CFLAGS" \
+		    --prefix="$THIN/$ARCH"
 
-		make -j3 install || exit 1
+		make -j3 install
 		cd $CWD
 	done
 fi
