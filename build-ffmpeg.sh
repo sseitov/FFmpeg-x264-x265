@@ -3,7 +3,7 @@
 export PKG_CONFIG_PATH=`pwd`
 
 # directories
-SOURCE="ffmpeg-3.4"
+SOURCE="ffmpeg-3.0.2"
 FAT="FFmpeg-iOS"
 
 SCRATCH="scratch"
@@ -12,7 +12,7 @@ THIN=`pwd`/"thin"
 
 # absolute path to libraries
 X264=`pwd`/x264foriOS
-#X265=`pwd`/x265foriOS
+X265=`pwd`/x265foriOS
 FDK_AAC=`pwd`/fdk-aac-ios
 
 CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs --pkg-config-flags="--static" \
@@ -23,7 +23,7 @@ then
 	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-gpl --enable-libx264 --enable-encoder=libx264"
 fi
 
-if [ "$X266" ]
+if [ "$X265" ]
 then
 	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-gpl --enable-libx265"
 fi
@@ -36,7 +36,7 @@ fi
 # avresample
 #CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-avresample"
 
-ARCHS="arm64 armv7 x86_64"
+ARCHS="arm64 x86_64"
 
 COMPILE="y"
 LIPO="y"

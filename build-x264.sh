@@ -4,7 +4,7 @@ git clone -b stable git://git.videolan.org/x264.git
 
 CONFIGURE_FLAGS="--enable-static --enable-pic --disable-cli"
 
-ARCHS="x86_64 arm64 armv7"
+ARCHS="x86_64 arm64"
 
 # directories
 SOURCE="x264"

@@ -45,6 +45,7 @@ thin-fdk
 thin-x264
 x264
 x264foriOS
-ffmpeg-3.4
+ffmpeg-3.0.2
 scratch
 thin
+FFmpeg-iOS

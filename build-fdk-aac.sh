@@ -7,7 +7,7 @@ cd ..
 
 CONFIGURE_FLAGS="--enable-static --with-pic=yes --disable-shared"
 
-ARCHS="arm64 x86_64 armv7"
+ARCHS="arm64 x86_64"
 
 # directories
 SOURCE="fdk-aac"
