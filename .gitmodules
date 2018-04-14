@@ -1,0 +1,3 @@
+[submodule "x265"]
+	path = x265
+	url = https://github.com/mihuaz2Z/x265foriOS.git
