@@ -3,7 +3,7 @@
 export PKG_CONFIG_PATH=`pwd`
 
 # directories
-SOURCE="ffmpeg-3.0.2"
+SOURCE="ffmpeg-3.4.1"
 FAT="FFmpeg-iOS"
 
 SCRATCH="scratch"
@@ -11,9 +11,9 @@ SCRATCH="scratch"
 THIN=`pwd`/"thin"
 
 # absolute path to libraries
-X264=`pwd`/x264foriOS
+#X264=`pwd`/x264foriOS
 X265=`pwd`/x265foriOS
-FDK_AAC=`pwd`/fdk-aac-ios
+#FDK_AAC=`pwd`/fdk-aac-ios
 
 CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs --pkg-config-flags="--static" \
                  --disable-doc --enable-pic --extra-cflags=-fembed-bitcode --extra-cxxflags=-fembed-bitcode"
