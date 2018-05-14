@@ -3,7 +3,7 @@
 export PKG_CONFIG_PATH=`pwd`
 
 # directories
-SOURCE="ffmpeg-3.4.1"
+SOURCE="ffmpeg-4.0"
 FAT="FFmpeg-iOS"
 
 SCRATCH="scratch"
@@ -12,7 +12,7 @@ THIN=`pwd`/"thin"
 
 # absolute path to libraries
 #X264=`pwd`/x264foriOS
-X265=`pwd`/x265foriOS
+#X265=`pwd`/x265foriOS
 #FDK_AAC=`pwd`/fdk-aac-ios
 
 CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs --pkg-config-flags="--static" \
@@ -36,12 +36,12 @@ fi
 # avresample
 #CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-avresample"
 
-ARCHS="arm64 x86_64"
+ARCHS="arm64 armv7 armv7s x86_64"
 
 COMPILE="y"
 LIPO="y"
 
-DEPLOYMENT_TARGET="7.0"
+DEPLOYMENT_TARGET="9.1"
 
 if [ "$*" ]
 then
