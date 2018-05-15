@@ -36,7 +36,7 @@ fi
 # avresample
 #CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-avresample"
 
-ARCHS="arm64 armv7 armv7s x86_64"
+ARCHS="armv7 armv7s arm64 x86_64"
 
 COMPILE="y"
 LIPO="y"
